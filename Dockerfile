@@ -1,36 +1,59 @@
 FROM python:3.10-slim
 
-# Install system dependencies (tmux + curl & ca-certificates untuk uv)
-# Sekaligus download dan install Cloudflare Tunnel (cloudflared)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends tmux curl ca-certificates && \
-    curl -L 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64' -o /usr/local/bin/cloudflared && \
-    chmod +x /usr/local/bin/cloudflared && \
-    rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Hugging Face Spaces / Railway mewajibkan user ID 1000
-RUN useradd -m -u 1000 user
-USER user
-ENV HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH
+# 1. Install sistem dasar, openssh-server, tmux, xvfb, dan dependensi bot
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-server tmux xvfb sudo curl wget jq unzip nano procps \
+    python3-pip python3-venv python3-dev python3-tk xauth scrot \
+    libxi6 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install uv dan google-colab-cli
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-RUN uv tool install google-colab-cli
+# 2. Konfigurasi SSH Server (AMAN: Pakai ENV, Disable Root)
+RUN mkdir /var/run/sshd
 
-WORKDIR $HOME/app
+# Buat user 'dotaja' dan tambahkan ke grup sudo
+RUN useradd -m -s /bin/bash dotaja && usermod -aG sudo dotaja
 
-COPY --chown=user . $HOME/app
+# Set password dari Environment Variable Railway (JANGAN HARDCODE DI SINI!)
+# Jika variable SSH_PASSWORD tidak diset di Railway, akan pakai 'defaultpass'
+RUN echo "dotaja:${SSH_PASSWORD:-defaultpass}" | chpasswd
 
-# Install dependency Python
-RUN pip install --no-cache-dir Flask google-auth-oauthlib Werkzeug
+# Konfigurasi SSH: Matikan root login, izinkan password auth untuk user biasa
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-EXPOSE 7860
+# Hilangkan batasan PAM jika diperlukan agar login lancar
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
-# CMD menjalankan 3 hal:
-# 1. Menulis Google Secret
-# 2. Menjalankan Flask (app.py) di background (&)
-# 3. Menjalankan Cloudflare Tunnel di foreground menggunakan token
-CMD sh -c 'if [ -n "$GOOGLE_CLIENT_SECRET" ]; then echo "$GOOGLE_CLIENT_SECRET" > client_secret.json; fi && \
-    python app.py & \
-    cloudflared tunnel --no-autoupdate run --token $CF_TUNNEL_TOKEN'
+# 3. Install Google Chrome 109 & Colab CLI
+RUN wget -q -O /tmp/chrome109.deb https://file.bahliljaya.tech/google-chrome-stable_109.0.5414.74-1_amd64.deb \
+    && apt-get update && apt-get install -y /tmp/chrome109.deb || apt-get install -f -y \
+    && apt-mark hold google-chrome-stable \
+    && rm /tmp/chrome109.deb
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && /root/.local/bin/uv tool install google-colab-cli \
+    && ln -sf /root/.local/bin/colab /usr/local/bin/colab
+
+# 4. Setup Direktori Kerja untuk User 'dotaja'
+WORKDIR /home/dotaja/app
+
+# Copy seluruh file project dari repo
+COPY --chown=dotaja:dotaja . /home/dotaja/app
+
+# Install Python packages yang dibutuhkan bot
+RUN pip3 install --no-cache-dir flask psutil requests selenium pyautogui colorama Pillow pyvirtualdisplay mss schedule google-auth-oauthlib Werkzeug
+
+# Berikan hak akses eksekusi ke menu.sh
+RUN chmod +x menu.sh
+
+# 5. OTOMATIS BUKA MENU: Masukkan eksekusi menu.sh ke .bashrc user dotaja
+# Ditambah perintah 'exit' agar jika user keluar dari menu.sh, sesi SSH langsung terputus bersih.
+RUN echo "cd /home/dotaja/app && ./menu.sh && exit" >> /home/dotaja/.bashrc
+
+# Buka port SSH
+EXPOSE 22
+
+# 6. Jalankan SSH Daemon di foreground sebagai proses utama (PID 1) agar container tetap hidup 24/7
+CMD ["/usr/sbin/sshd", "-D"]
