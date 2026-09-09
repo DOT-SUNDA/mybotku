@@ -17,7 +17,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 # ==========================================
 # ⚙️ KONFIGURASI UTAMA & DIREKTORI
 # ==========================================
-APP_PORT = 80 # Port lokal untuk callback Auth
+APP_PORT = 8080 # Port lokal untuk callback Auth
 SHARED_SECRET = "jokowi123"
 MASTER_AUTH_URL = "https://colab.bahliljaya.tech"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
