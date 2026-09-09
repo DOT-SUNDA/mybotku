@@ -72,13 +72,7 @@ while true; do
             ;;
         3)
             echo -e "\n\e[1;33m[!] Menjalankan login.py di Virtual Display...\e[0m"
-            RES=$(python3 main.py --run-bot "login.py")
-            
-            if [ "$RES" == "SUCCESS" ]; then
-                echo -e "\e[1;32m[+] Bot login.py berhasil dijalankan di background!\e[0m"
-            else
-                echo -e "\e[1;31m[-] Gagal! Pastikan file login.py ada di folder ini.\e[0m"
-            fi
+            nohup python3 main.py --run-bot "login.py" > /dev/null 2>&1 &
             echo -en "\nTekan ENTER untuk kembali..."
             read
             ;;
