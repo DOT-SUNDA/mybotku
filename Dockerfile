@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -28,9 +28,7 @@ RUN wget -q -O /tmp/chrome109.deb https://file.bahliljaya.tech/google-chrome-sta
     && apt-mark hold google-chrome-stable \
     && rm /tmp/chrome109.deb
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && /root/.local/bin/uv tool install google-colab-cli \
-    && ln -sf /root/.local/bin/colab /usr/local/bin/colab
+RUN pip3 install --no-cache-dir google-colab-cli
 
 # 4. Setup Direktori Kerja untuk User 'dotaja'
 WORKDIR /home/dotaja/app
