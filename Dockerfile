@@ -38,6 +38,8 @@ WORKDIR /home/dotaja/app
 # Copy seluruh file project dari repo
 COPY --chown=dotaja:dotaja . /home/dotaja/app
 
+RUN chown -R dotaja:dotaja /home/dotaja/app
+
 # Install Python packages yang dibutuhkan bot
 RUN pip3 install --no-cache-dir flask psutil requests selenium pyautogui colorama Pillow pyvirtualdisplay mss schedule google-auth-oauthlib Werkzeug
 
