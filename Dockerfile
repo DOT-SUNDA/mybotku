@@ -9,20 +9,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxi6 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon0 \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Konfigurasi SSH Server (AMAN: Pakai ENV, Disable Root)
-RUN mkdir /var/run/sshd
+# 2. Konfigurasi SSH Server
+# Tambahkan -p agar tidak error jika folder sudah ada
+RUN mkdir -p /var/run/sshd
 
-# Buat user 'dotaja' dan tambahkan ke grup sudo
+# Buat user 'dotaja' dan tambahkan ke grup sudo (JANGAN set password di sini)
 RUN useradd -m -s /bin/bash dotaja && usermod -aG sudo dotaja
-
-# Set password dari Environment Variable Railway (JANGAN HARDCODE DI SINI!)
-# Jika variable SSH_PASSWORD tidak diset di Railway, akan pakai 'defaultpass'
-RUN echo "dotaja:${SSH_PASSWORD:-defaultpass}" | chpasswd
 
 # Konfigurasi SSH: Matikan root login, izinkan password auth untuk user biasa
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
 RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-
 # Hilangkan batasan PAM jika diperlukan agar login lancar
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
@@ -49,11 +45,14 @@ RUN pip3 install --no-cache-dir flask psutil requests selenium pyautogui coloram
 RUN chmod +x menu.sh
 
 # 5. OTOMATIS BUKA MENU: Masukkan eksekusi menu.sh ke .bashrc user dotaja
-# Ditambah perintah 'exit' agar jika user keluar dari menu.sh, sesi SSH langsung terputus bersih.
 RUN echo "cd /home/dotaja/app && ./menu.sh && exit" >> /home/dotaja/.bashrc
 
 # Buka port SSH
 EXPOSE 22
 
-# 6. Jalankan SSH Daemon di foreground sebagai proses utama (PID 1) agar container tetap hidup 24/7
-CMD ["/usr/sbin/sshd", "-D"]
+# 6. Setup Entrypoint (Script yang akan dijalankan saat container nyala)
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Jalankan entrypoint sebagai proses utama
+ENTRYPOINT ["/entrypoint.sh"]
