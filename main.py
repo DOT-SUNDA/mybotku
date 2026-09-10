@@ -37,7 +37,8 @@ screen_spam = re.compile(r'\\[\d+\\]\s+\d+:bash\*')
 
 for file_path in [EMAIL_FILE, MANAGER_EMAILS_FILE, SYS_LOG_FILE]:
     if not os.path.exists(file_path):
-        with open(file_path, 'w', encoding='utf-8') as f: f.write("")
+        with open(file_path, 'w', encoding='utf-8') as f: 
+            f.write("")
 
 # ==========================================
 # 🌐 MICRO HTTP SERVER (UNTUK TERIMA AUTH)
@@ -64,8 +65,10 @@ class AuthHandler(BaseHTTPRequestHandler):
                 t_data = json.loads(base64.b64decode(data_b64).decode('utf-8'))
                 c_dir = os.path.join(PROFILE_DIR, profile, ".config", "colab-cli")
                 os.makedirs(c_dir, exist_ok=True)
-                with open(os.path.join(c_dir, "token.json"), 'w') as f: json.dump(t_data, f, indent=2)
-                with open(os.path.join(c_dir, "token_master.json"), 'w') as f: json.dump(t_data, f, indent=2)
+                with open(os.path.join(c_dir, "token.json"), 'w') as f: 
+                    json.dump(t_data, f, indent=2)
+                with open(os.path.join(c_dir, "token_master.json"), 'w') as f: 
+                    json.dump(t_data, f, indent=2)
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
@@ -88,17 +91,21 @@ def start_local_server():
 # ==========================================
 # 🌐 FUNGSI BANTUAN (HELPER)
 # ==========================================
-def clear_screen(): os.system('cls' if os.name == 'nt' else 'clear')
+def clear_screen(): 
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def append_log(msg):
     timestamp = time.strftime('%H:%M:%S')
     line = f"[{timestamp}] {msg}"
     print(f"\033[0;32m{line}\033[0m")
     try:
-        with open(SYS_LOG_FILE, "a", encoding='utf-8') as f: f.write(line + "\n")
-    except: pass
+        with open(SYS_LOG_FILE, "a", encoding='utf-8') as f: 
+            f.write(line + "\n")
+    except: 
+        pass
 
-def run_cmd(cmd): subprocess.run(cmd, shell=True, close_fds=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+def run_cmd(cmd): 
+    subprocess.run(cmd, shell=True, close_fds=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # ==========================================
 # ⚙️ KONFIGURASI OTOMATISASI & GLOBAL
@@ -113,8 +120,10 @@ def load_config():
     config = DEFAULT_CONFIG.copy()
     if os.path.exists(MASTER_CONFIG_FILE):
         try:
-            with open(MASTER_CONFIG_FILE, 'r', encoding='utf-8') as f: config.update(json.load(f))
-        except: pass
+            with open(MASTER_CONFIG_FILE, 'r', encoding='utf-8') as f: 
+                config.update(json.load(f))
+        except: 
+            pass
     return config
 
 def save_config(data):
@@ -240,8 +249,10 @@ def trigger_chain():
         try:
             core_clear_logs()
             append_log(f" -> Clear log ke-{i} sukses.")
-        except: pass
-        if i < 3: time.sleep(20)
+        except: 
+            pass
+        if i < 3: 
+            time.sleep(20)
 
     if script.strip():
         append_log(f"[6/6] Mengirim Script Eksekusi ke Terminal...")
@@ -261,8 +272,10 @@ def run_scheduler():
 def reload_scheduler():
     schedule.clear()
     config = load_config()
-    try: interval = int(config.get('interval_jam', 11))
-    except: interval = 11
+    try: 
+        interval = int(config.get('interval_jam', 11))
+    except: 
+        interval = 11
         
     if interval > 0:
         schedule.every(interval).hours.do(trigger_chain)
@@ -286,43 +299,87 @@ def settings_menu():
         
         if sub_pil == '1':
             baru = input("Masukkan Secret Key baru: ")
-            if baru: config['secret'] = baru; save_config(config); print("\033[1;32mTersimpan!\033[0m")
+            if baru: 
+                config['secret'] = baru
+                save_config(config)
+                print("\033[1;32mTersimpan!\033[0m")
             time.sleep(1)
             
         elif sub_pil == '2':
-            print("\nMasukkan daftar email tujuan Colab (Pisahkan dengan koma atau baris baru). Ketik 'SAVE' di akhir untuk menyimpan.")
+            print("\nSilakan paste daftar email (bisa langsung copy-paste banyak baris).")
+            print("Tekan Enter 2x beruntun di baris kosong untuk otomatis menyimpan:")
             lines = []
+            empty_count = 0
             while True:
-                line = input("> ")
-                if line.strip().upper() == 'SAVE': break
-                if line: lines.extend([x.strip() for x in line.replace(',', '\n').split('\n') if x.strip()])
+                try:
+                    line = input()
+                    if line.strip() == '':
+                        empty_count += 1
+                        if empty_count >= 2: break
+                    else:
+                        empty_count = 0
+                        
+                    if line.strip(): 
+                        lines.extend([x.strip() for x in line.replace(',', '\n').split('\n') if x.strip()])
+                except EOFError:
+                    break
+            
             with open(MANAGER_EMAILS_FILE, 'w', encoding='utf-8') as f:
                 f.write("\n".join(lines))
-            print("\033[1;32mData Manager Emails Tersimpan!\033[0m")
-            time.sleep(1)
+            print("\n\033[1;32mData Manager Emails Tersimpan!\033[0m")
+            time.sleep(1.5)
             
         elif sub_pil == '3':
-            print("\nMasukkan isi file email.txt lokal. Ketik 'SAVE' di baris baru untuk menyimpan.")
+            print("\nSilakan paste isi file email.txt lokal (bisa langsung copy-paste banyak baris).")
+            print("Tekan Enter 2x beruntun di baris kosong untuk otomatis menyimpan:")
             lines = []
+            empty_count = 0
             while True:
-                line = input("> ")
-                if line.strip().upper() == 'SAVE': break
-                lines.append(line)
+                try:
+                    line = input()
+                    if line == '':
+                        empty_count += 1
+                        if empty_count >= 2: 
+                            if lines and lines[-1] == '':
+                                lines.pop() # Hapus 1 baris kosong sisa dari trigger double enter
+                            break
+                    else:
+                        empty_count = 0
+                    lines.append(line)
+                except EOFError:
+                    break
+                    
             with open(EMAIL_FILE, 'w', encoding='utf-8') as f:
                 f.write("\n".join(lines))
-            print("\033[1;32mData email.txt Tersimpan!\033[0m")
-            time.sleep(1)
+            print("\n\033[1;32mData email.txt Tersimpan!\033[0m")
+            time.sleep(1.5)
             
         elif sub_pil == '4':
-            print("\nUntuk mengubah Script Loop Otomatis, siapkan script kamu di sebuah file (misal: /tmp/loop.sh)")
-            baru_script = input("Masukkan Path File Script: ")
-            if baru_script.strip() and os.path.exists(baru_script.strip()):
-                with open(baru_script.strip(), 'r', encoding='utf-8') as f:
-                    config['script_loop'] = f.read()
+            print("\nSilakan PASTE seluruh Script Loop kamu di bawah ini (mendukung multi-baris).")
+            print("Tekan Enter 2x beruntun di baris kosong untuk otomatis menyimpan:")
+            lines = []
+            empty_count = 0
+            while True:
+                try:
+                    line = input()
+                    if line == '':
+                        empty_count += 1
+                        if empty_count >= 2: 
+                            if lines and lines[-1] == '':
+                                lines.pop() # Hapus 1 baris kosong sisa dari trigger double enter
+                            break
+                    else:
+                        empty_count = 0
+                    lines.append(line)
+                except EOFError:
+                    break
+            
+            if lines:
+                config['script_loop'] = "\n".join(lines)
                 save_config(config)
-                print("\033[1;32m[+] Script berhasil di-update dari file tersebut.\033[0m")
+                print("\n\033[1;32m[+] Script berhasil disimpan secara global!\033[0m")
             else:
-                print("\033[1;31m[-] File tidak ditemukan! Script lama tetap digunakan.\033[0m")
+                print("\n\033[1;31m[-] Dibatalkan karena input kosong.\033[0m")
             time.sleep(1.5)
             
         elif sub_pil == '5':
@@ -370,7 +427,8 @@ if __name__ == "__main__":
     elif cmd == "--mass-inject":
         file_path = sys.argv[2] if len(sys.argv) > 2 else ""
         if os.path.exists(file_path):
-            with open(file_path, 'r', encoding='utf-8') as f: script_text = f.read()
+            with open(file_path, 'r', encoding='utf-8') as f: 
+                script_text = f.read()
             core_mass_inject(script_text)
         else:
             print("ERROR_FILE_NOT_FOUND")
@@ -391,14 +449,18 @@ if __name__ == "__main__":
         trigger_chain()
 
     elif cmd == "--resource":
-        try: print(f"CPU Usage: {min(100, int((os.getloadavg()[0] / (os.cpu_count() or 1)) * 100))}%")
-        except: pass
+        try: 
+            print(f"CPU Usage: {min(100, int((os.getloadavg()[0] / (os.cpu_count() or 1)) * 100))}%")
+        except: 
+            pass
         try:
-            with open('/proc/meminfo', 'r') as f: mem = f.read()
+            with open('/proc/meminfo', 'r') as f: 
+                mem = f.read()
             tot = int(re.search(r'MemTotal:\s+(\d+)', mem).group(1)) / 1024
             ava = int(re.search(r'MemAvailable:\s+(\d+)', mem).group(1)) / 1024
             print(f"RAM Usage: {int(tot - ava)}MB / {int(tot)}MB")
-        except: pass
+        except: 
+            pass
 
     elif cmd == "--settings":
         settings_menu()
