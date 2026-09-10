@@ -14,7 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN mkdir -p /var/run/sshd
 
 # Buat user 'dotaja' dan tambahkan ke grup sudo (JANGAN set password di sini)
-RUN useradd -m -s /bin/bash dotaja && usermod -aG sudo dotaja
+RUN useradd -m -s /bin/bash dotaja \
+    && usermod -aG sudo dotaja \
+    && echo "dotaja ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/dotaja \
+    && chmod 0440 /etc/sudoers.d/dotaja
 
 # Konfigurasi SSH: Matikan root login, izinkan password auth untuk user biasa
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config
