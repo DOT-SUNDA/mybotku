@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # 1. Install sistem dasar, openssh-server, tmux, xvfb, dan dependensi bot
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    openssh-server tmux xvfb sudo curl wget jq unzip nano procps \
+    openssh-server tmux xvfb sudo htop curl wget jq unzip nano procps \
     python3-pip python3-venv python3-dev python3-tk xauth scrot \
     libxi6 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxkbcommon0 \
     && rm -rf /var/lib/apt/lists/*
