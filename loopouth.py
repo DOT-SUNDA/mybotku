@@ -128,7 +128,7 @@ for i, (EMAIL, PASSWORD) in enumerate(CREDENTIALS, start=START_INDEX):
     print(f"🔑 PROSES AKUN: {EMAIL} ({folder_name})")
     print(f"========================================================")
     
-    TARGET_URL = f"https://colab.bahliljaya.tech/start_auth?agent_url=http://127.0.0.1:8080&profile={folder_name}"
+    TARGET_URL = f"https://colab.bahliljaya.tech/start_auth?agent_url=http://{VPS_IP}:{VPS_PORT}&profile={folder_name}"
 
     cmd = [
         CHROME_PATH, 
