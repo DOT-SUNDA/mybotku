@@ -48,7 +48,7 @@ RUN pip3 install --no-cache-dir flask psutil requests selenium pyautogui coloram
 RUN chmod +x menu.sh
 
 # 5. OTOMATIS BUKA MENU: Masukkan eksekusi menu.sh ke .bashrc user dotaja
-RUN echo "cd /home/dotaja/app && ./menu.sh" >> /home/dotaja/.bashrc
+RUN echo 'if [ -n "$SSH_CONNECTION" ] && [ -z "$TMUX" ]; then cd /home/dotaja/app && ./menu.sh && exit; fi' >> /home/dotaja/.bashrc
 
 # Buka port SSH
 EXPOSE 22
