@@ -194,8 +194,10 @@ def core_mass_inject(script_text):
         
         for line in script_text.split('\n'):
             if not line.strip(): continue
+            
             if "{{CREATE_EMAIL}}" in line:
-                run_cmd(f"tmux send-keys -t colab_{p} 'cat << '\\'EOF'\\' > email.txt' C-m")
+                # [PERBAIKAN] Menggunakan tanda kutip ganda agar aman dibaca bash
+                run_cmd(f'tmux send-keys -t colab_{p} "cat << \'EOF\' > email.txt" C-m')
                 time.sleep(2)
                 for mail in chunk:
                     run_cmd(f"tmux send-keys -t colab_{p} '{mail}' C-m")
