@@ -23,8 +23,8 @@ EMAIL_FILE = os.path.join(BASE_PATH, "email.txt")
 MAPPING_FILE = os.path.join(BASE_PATH, "mapping_profil.txt")
 HISTORY_FILE = os.path.join(BASE_PATH, "history_sukses.txt") 
 
-TELEGRAM_TOKEN = "8455364218:AAFoy_mvhZi9HYeTM48hO9aXapE-cYmWuCs"
-TELEGRAM_CHAT_ID = "6501677690"
+TELEGRAM_TOKEN = "kosong"
+TELEGRAM_CHAT_ID = "kosong"
 
 # Target file gambar yang akan disedot oleh agent.py
 SS_FILE = os.path.join(BASE_PATH, "bukti_dotaja01.png") 
