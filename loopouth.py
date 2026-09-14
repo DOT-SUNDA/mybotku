@@ -47,8 +47,8 @@ if not VPS_IP:
     sys.exit(1)
 
 # KONFIGURASI TELEGRAM
-TELEGRAM_TOKEN = "8455364218:AAFoy_mvhZi9HYeTM48hO9aXapE-cYmWuCs"
-TELEGRAM_CHAT_ID = "6501677690"
+TELEGRAM_TOKEN = "kosong"
+TELEGRAM_CHAT_ID = "kosong"
 SS_FILE = os.path.join(BASE_PATH, "tangkapan_akhir.png") 
 
 # ==========================================
